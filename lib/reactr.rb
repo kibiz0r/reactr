@@ -1,0 +1,5 @@
+require 'coalesce'
+require 'reactr/subscription'
+require 'reactr/streamable'
+require 'reactr/stream'
+require 'reactr/streamer'
