@@ -8,13 +8,13 @@ describe Reactr::Streamable do
 
     it "yields 5" do
       expect do |b|
-        subject.on_next &b
+        subject.each &b
       end.to yield_with_args(5)
     end
 
     it "ends" do
       expect do |b|
-        subject.on_done &b
+        subject.success &b
       end.to yield_with_no_args
     end
   end

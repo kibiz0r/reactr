@@ -2,19 +2,48 @@ module Reactr
   class Stream
     include Reactr::Streamable
 
-    def subscribe(handlers)
-      each = handlers[:each]
-      success = handlers[:success]
-      failure = handlers[:failure]
+    def initialize(streamer = nil, &setup_block)
+      @streamer = if block_given?
+                    Streamer.new &setup_block
+                  else
+                    streamer
+                  end
+    end
+
+    def subscribe(streamer_or_handlers, override_handlers = {})
+      each, success, failure = if streamer_or_handlers.is_a? Streamer
+                                 s, o = streamer_or_handlers, override_handlers
+                                 [
+                                   o[:each]._? { lambda { |v| s << v } },
+                                   o[:success]._? { lambda { s.done } },
+                                   o[:failure]._? { lambda { |e| s.error e } }
+                                 ]
+                               else
+                                 [
+                                   streamer_or_handlers[:each],
+                                   streamer_or_handlers[:success],
+                                   streamer_or_handlers[:failure]
+                                 ]
+                               end
 
       eaches << each if each
       successes << success if success
       failures << failure if failure
 
+      start
+
       Reactr::Subscription.new self, each, success, failure
     end
     
     def start
+      if @streamer
+        @streamer.subscribe(
+          each: lambda { |v| process_next v },
+          success: lambda { process_done },
+          failure: lambda { |e| process_error e }
+        )
+      end
+      self
     end
 
     def ended?

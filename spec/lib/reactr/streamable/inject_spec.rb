@@ -4,13 +4,14 @@ class Foo
   def self.attr_streamer(*attrs)
     attrs.each do |attr|
       streamer = Reactr::Streamer.new
+      stream = Reactr::Stream.new streamer
 
       define_method :"#{attr}=" do |value|
         streamer << value
       end
 
       define_method attr do
-        streamer
+        stream
       end
     end
   end
@@ -21,7 +22,7 @@ end
 describe Reactr::Streamable do
   describe "#inject" do
     subject do
-      Reactr::Streamer.new do |streamer|
+      Reactr::Stream.new do |streamer|
         1.upto 9 do |n|
           streamer << n
         end

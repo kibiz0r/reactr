@@ -13,11 +13,11 @@ module Reactr
     end
 
     def map(&block)
-      Streamer.new do |streamer|
+      Stream.new do |streamer|
         self.subscribe streamer,
-          each: lambda do |value|
+          each: lambda { |value|
             streamer << block[value]
-          end
+          }
       end
     end
 
@@ -26,52 +26,48 @@ module Reactr
     end
 
     def inject(initial = nil, sym = nil, &block)
-      Streamer.new do |streamer|
+      Stream.new do |streamer|
         memo_provided = !initial.nil?
         memo = initial
 
-        self.subscribe streamer,
-          each: lambda do |value|
+        self.subscribe each: lambda { |value|
             memo = if memo_provided
                      block[memo, value]
                    else
                      memo_provided = true
                      value
                    end
-          end,
-          success: lambda do
+          },
+          success: lambda {
             streamer << memo
             streamer.done
-          end
+          },
+          error: lambda { |e|
+            streamer.error e
+          }
       end
     end
 
     def concat(stream)
-      Streamer.new do |streamer|
+      Stream.new do |streamer|
         self.subscribe streamer,
-          each: lambda do |value|
-            streamer << value
-          end,
-          success: lambda do
-            stream.subscribe streamer,
-              each: lambda do |value|
-                streamer << value
-              end
-          end
+          success: lambda {
+            stream.subscribe streamer
+          }
       end
     end
 
     def where(&filter)
-      Streamer.new do |streamer|
+      Stream.new do |streamer|
         self.subscribe streamer,
-          each: lambda do |value|
+          each: lambda { |value|
             streamer << value if filter[value]
-          end
+          }
       end
     end
 
     def self.return(value)
-      Streamer.new do |streamer|
+      Stream.new do |streamer|
         streamer << value
         streamer.done
       end

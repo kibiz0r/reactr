@@ -1,5 +1,6 @@
 require 'coalesce'
 require 'reactr/subscription'
+require 'reactr/stream_ended_error'
 require 'reactr/streamable'
 require 'reactr/stream'
 require 'reactr/streamer'

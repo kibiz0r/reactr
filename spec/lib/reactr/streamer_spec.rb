@@ -11,7 +11,7 @@ describe Reactr::Streamer do
 
     it "allows a block to provide its value stream at initialization" do
       expect do |b|
-        subject.on_next &b
+        subject.each &b
       end.to yield_successive_args('lazy', 'values')
     end
   end

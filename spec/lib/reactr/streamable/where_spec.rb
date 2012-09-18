@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Reactr::Streamable do
   describe "#where" do
     subject do
-      Reactr::Streamer.new do |streamer|
+      Reactr::Stream.new do |streamer|
         streamer << 3
         streamer << 23
         streamer << 9
