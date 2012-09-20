@@ -40,7 +40,8 @@ module Reactr
         memo_provided = !initial.nil?
         memo = initial
 
-        self.subscribe each: lambda { |value|
+        self.subscribe streamer,
+          each: lambda { |value|
             memo = if memo_provided
                      block[memo, value]
                    else
@@ -51,9 +52,6 @@ module Reactr
           success: lambda {
             streamer << memo
             streamer.done
-          },
-          error: lambda { |e|
-            streamer.error e
           }
       end
     end
