@@ -28,8 +28,8 @@ module Reactr
     def flat_map(&block)
       Stream.new do |streamer|
         self.subscribe(
-          each: lambda { |stream_itself|
-            stream_itself.subscribe streamer
+          each: lambda { |value|
+            block[value].subscribe streamer
           }
         )
       end

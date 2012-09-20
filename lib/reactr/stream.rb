@@ -12,16 +12,28 @@ module Reactr
       elsif stream.is_a? Reactr::Streamable
         @stream = stream
       end
+
+      (@@streams ||= []) << self
     end
 
     def subscribe(handlers_or_streamer, override_handlers = {})
       raise "passed nil to subscribe" if handlers_or_streamer.nil?
 
-      unless handlers_or_streamer.is_a?(Streamer) || handlers_or_streamer.is_a?(Hash)
+      if handlers_or_streamer.is_a? Hash
+        handlers_or_streamer.each do |kind, handler|
+          raise "unknown subscription type: #{kind}" unless [:each, :success, :failure].include? kind
+
+          unless handler.nil? || handler.is_a?(Proc)
+            raise "expected #{kind} handler to be a proc object, got #{handlers_or_streamer[handler]}"
+          end
+        end
+      end
+
+      unless handlers_or_streamer.is_a?(Broadcastable) || handlers_or_streamer.is_a?(Hash)
         raise "first argument to subscribe must be a hash of :each, :success, and :failure handlers, or a broadcastable object"
       end
 
-      each, success, failure = if handlers_or_streamer.is_a? Streamer
+      each, success, failure = if handlers_or_streamer.is_a? Broadcastable
                                  streamer = handlers_or_streamer
                                  [
                                    override_handlers[:each]._? { lambda { |v| streamer << v } },
@@ -47,7 +59,8 @@ module Reactr
     end
     
     def start
-      if @stream
+      if @stream && !@started
+        @started = true
         @stream.subscribe(
           each: lambda { |v| process_next v },
           success: lambda { process_done },
@@ -80,6 +93,7 @@ module Reactr
     def end_stream
       raise StreamEndedError if ended?
       @ended = true
+      @@streams.delete self
     end
 
     def process_next(value)

@@ -4,6 +4,8 @@ module Reactr
 
     def initialize(&setup_block)
       @lazy_setup = setup_block
+
+      (@@streams ||= []) << self
     end
 
     def <<(value)
@@ -19,9 +21,9 @@ module Reactr
     end
 
     def start
-      if @lazy_setup
+      if @lazy_setup && !@started
+        @started = true
         @lazy_setup[self]
-        @lazy_setup = nil
       end
       self
     end

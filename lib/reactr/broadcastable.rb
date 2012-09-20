@@ -1,6 +1,5 @@
 module Reactr
   module Broadcastable
-    include Streamable
 # 
 #     def select(&block)
 #       Streamer.new.tap do |broadcaster|
