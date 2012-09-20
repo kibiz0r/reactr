@@ -2,27 +2,38 @@ module Reactr
   class Stream
     include Reactr::Streamable
 
-    def initialize(streamer = nil, &setup_block)
-      @streamer = if block_given?
-                    Streamer.new &setup_block
-                  else
-                    streamer
-                  end
+    def initialize(stream = nil, &setup_block)
+      if block_given? && stream.is_a?(Reactr::Streamable)
+        raise "provided both a Reactr::Streamable and a setup block (which would create a lazy stream using a Reactr::Streamer), please use one or the other"
+      end
+
+      if block_given?
+        @stream = Streamer.new &setup_block
+      elsif stream.is_a? Reactr::Streamable
+        @stream = stream
+      end
     end
 
-    def subscribe(streamer_or_handlers, override_handlers = {})
-      each, success, failure = if streamer_or_handlers.is_a? Streamer
-                                 s, o = streamer_or_handlers, override_handlers
+    def subscribe(handlers_or_streamer, override_handlers = {})
+      raise "passed nil to subscribe" if handlers_or_streamer.nil?
+
+      unless handlers_or_streamer.is_a?(Streamer) || handlers_or_streamer.is_a?(Hash)
+        raise "first argument to subscribe must be a hash of :each, :success, and :failure handlers, or a broadcastable object"
+      end
+
+      each, success, failure = if handlers_or_streamer.is_a? Streamer
+                                 streamer = handlers_or_streamer
                                  [
-                                   o[:each]._? { lambda { |v| s << v } },
-                                   o[:success]._? { lambda { s.done } },
-                                   o[:failure]._? { lambda { |e| s.error e } }
+                                   override_handlers[:each]._? { lambda { |v| streamer << v } },
+                                   override_handlers[:success]._? { lambda { streamer.done } },
+                                   override_handlers[:failure]._? { lambda { |e| streamer.error e } }
                                  ]
                                else
+                                 handlers = handlers_or_streamer
                                  [
-                                   streamer_or_handlers[:each],
-                                   streamer_or_handlers[:success],
-                                   streamer_or_handlers[:failure]
+                                   handlers[:each],
+                                   handlers[:success],
+                                   handlers[:failure]
                                  ]
                                end
 
@@ -36,8 +47,8 @@ module Reactr
     end
     
     def start
-      if @streamer
-        @streamer.subscribe(
+      if @stream
+        @stream.subscribe(
           each: lambda { |v| process_next v },
           success: lambda { process_done },
           failure: lambda { |e| process_error e }

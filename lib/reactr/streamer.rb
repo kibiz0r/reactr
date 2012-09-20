@@ -1,5 +1,7 @@
 module Reactr
   class Streamer < Stream
+    include Broadcastable
+
     def initialize(&setup_block)
       @lazy_setup = setup_block
     end

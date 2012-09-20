@@ -25,6 +25,16 @@ module Reactr
       map(&block).start
     end
 
+    def flat_map(&block)
+      Stream.new do |streamer|
+        self.subscribe(
+          each: lambda { |stream_itself|
+            stream_itself.subscribe streamer
+          }
+        )
+      end
+    end
+
     def inject(initial = nil, sym = nil, &block)
       Stream.new do |streamer|
         memo_provided = !initial.nil?
@@ -62,6 +72,15 @@ module Reactr
         self.subscribe streamer,
           each: lambda { |value|
             streamer << value if filter[value]
+          }
+      end
+    end
+
+    def reject(&filter)
+      Stream.new do |streamer|
+        self.subscribe streamer,
+          each: lambda { |value|
+            streamer << value unless filter[value]
           }
       end
     end
