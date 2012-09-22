@@ -93,7 +93,6 @@ module Reactr
     def end_stream
       raise StreamEndedError if ended?
       @ended = true
-      (@@streams ||= []).delete self
     end
 
     def process_next(value)

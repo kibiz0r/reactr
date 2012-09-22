@@ -65,6 +65,41 @@ module Reactr
       end
     end
 
+    def invoke(&block)
+      Stream.new do |streamer|
+        self.subscribe streamer,
+          each: lambda { |value|
+            block[value]
+            streamer << value
+          }
+      end
+    end
+
+    def skip_until(stream)
+      Stream.new do |streamer|
+        self.subscribe streamer,
+          each: lambda { |value|
+            streamer << value if stream.ended?
+          }
+      end
+    end
+
+    def wait_until(stream)
+      Stream.new do |streamer|
+        stream.subscribe success: lambda {
+          self.subscribe streamer
+        }
+      end
+    end
+
+    def upon(stream)
+      Reactr::Stream.new do |proxy|
+        stream.success do
+          self.subscribe proxy
+        end
+      end
+    end
+
     def where(&filter)
       Stream.new do |streamer|
         self.subscribe streamer,
@@ -83,7 +118,7 @@ module Reactr
       end
     end
 
-    def self.return(value)
+    def self.return(value = nil)
       Stream.new do |streamer|
         streamer << value
         streamer.done

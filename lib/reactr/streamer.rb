@@ -23,11 +23,7 @@ module Reactr
     def start
       if @lazy_setup && !@started
         @started = true
-        begin
-          @lazy_setup[self]
-        rescue => error
-          self.error error
-        end
+        @lazy_setup[self]
       end
       self
     end
