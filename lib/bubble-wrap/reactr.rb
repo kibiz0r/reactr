@@ -1,6 +1,5 @@
 require 'bubble-wrap/loader'
 require 'bubble-wrap/coalesce'
-require 'konjure'
 
 BubbleWrap.require 'lib/reactr/**/*.rb' do
   file('lib/reactr/stream.rb').depends_on ['lib/reactr/subscription.rb', 'lib/reactr/streamable.rb', 'lib/reactr/stream_ended_error.rb']
