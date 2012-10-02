@@ -12,8 +12,6 @@ module Reactr
       elsif stream.is_a? Reactr::Streamable
         @stream = stream
       end
-
-      (@@streams ||= []) << self
     end
 
     def subscribe(handlers_or_streamer, override_handlers = {})
