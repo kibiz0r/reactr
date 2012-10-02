@@ -1,9 +1,13 @@
+AllStreams = [] unless defined? AllStreams
+
 module Reactr
   class Streamer < Stream
     include Broadcastable
 
     def initialize(&setup_block)
       @lazy_setup = setup_block
+      AllStreams << self
+      @stream_index = AllStreams.size - 1
     end
 
     def <<(value)
@@ -27,3 +31,4 @@ module Reactr
     end
   end
 end
+

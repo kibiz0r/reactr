@@ -1,3 +1,5 @@
+AllStreams = [] unless defined? AllStreams
+
 module Reactr
   class Stream
     include Reactr::Streamable
@@ -12,6 +14,9 @@ module Reactr
       elsif stream.is_a? Reactr::Streamable
         @stream = stream
       end
+
+      AllStreams << self
+      @stream_index = AllStreams.size - 1
     end
 
     def subscribe(handlers_or_streamer, override_handlers = {})
@@ -107,6 +112,8 @@ module Reactr
       successes.each do |success|
         success.call
       end
+
+      AllStreams[@stream_index] = nil
     end
 
     def process_error(error)
@@ -115,6 +122,8 @@ module Reactr
       failures.each do |failure|
         failure.call error
       end
+
+      AllStreams[@stream_index] = nil
     end
 
     def eaches
@@ -130,3 +139,4 @@ module Reactr
     end
   end
 end
+
